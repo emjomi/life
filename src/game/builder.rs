@@ -1,4 +1,4 @@
-use super::{Cell, Game};
+use super::{Cell, Cell::*, Game};
 use rand::seq::SliceRandom;
 
 pub struct NoGrid;
@@ -16,6 +16,7 @@ impl Builder<NoGrid> {
             grid: NoGrid,
         }
     }
+
     pub fn grid<const N: usize>(self, grid: [[Cell; N]; N]) -> Builder<Grid> {
         Builder {
             size: N,
@@ -24,7 +25,7 @@ impl Builder<NoGrid> {
     }
 
     pub fn random_grid(self, size: usize) -> Builder<Grid> {
-        const CELL_VARIANTS: [Cell; 2] = [Cell::Dead, Cell::Live];
+        const CELL_VARIANTS: [Cell; 2] = [Dead, Live];
 
         let mut rng = rand::thread_rng();
 

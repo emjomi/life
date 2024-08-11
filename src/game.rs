@@ -1,13 +1,9 @@
 mod builder;
+mod cell;
 
 use std::fmt;
 use builder::{Builder, NoGrid};
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum Cell {
-    Dead,
-    Live,
-}
+use cell::{Cell, Cell::*};
 
 #[derive(Debug, Clone)]
 pub struct Game {
@@ -21,8 +17,8 @@ impl fmt::Display for Game {
         for row in self.grid.chunks(self.size) {
             for cell in row {
                 result.push(match cell {
-                    Cell::Dead => ' ',
-                    Cell::Live => '@',
+                    Dead => ' ',
+                    Live => '@',
                 });
             }
             result.push('\n');
@@ -33,7 +29,7 @@ impl fmt::Display for Game {
 
 impl Game {
     pub fn builder() -> Builder<NoGrid> {
-        Builder::new()
+        Builder::<NoGrid>::new()
     }
 
     pub fn evolve(&mut self) {
@@ -47,28 +43,28 @@ impl Game {
             let col = i % self.size;
 
             let neighbors = NEIGHBOR_OFFSETS.iter().filter(|(dx, dy)| {
-                    let neighbor_row = (row as isize + dx).rem_euclid(self.size as isize) as usize;
-                    let neighbor_col = (col as isize + dy).rem_euclid(self.size as isize) as usize;
-                    self.grid[neighbor_row * self.size + neighbor_col] == Cell::Live
-                }).count();
+                let neighbor_row = (row as isize + dx).rem_euclid(self.size as isize) as usize;
+                let neighbor_col = (col as isize + dy).rem_euclid(self.size as isize) as usize;
+                self.grid[neighbor_row * self.size + neighbor_col] == Live
+            }).count();
 
             match (cell, neighbors) {
-                (Cell::Dead, 3) => Cell::Live,
-                (Cell::Live, 2 | 3) => Cell::Live,
-                _ => Cell::Dead,
+                (Dead, 3) => Live,
+                (Live, 2 | 3) => Live,
+                _ => Dead,
             }
         }).collect();
         self.grid = next_cells;
     }
     
     pub fn clear_grid(&mut self) {
-        self.grid = (0..self.grid.len()).map(|_| Cell::Dead).collect();
+        self.grid = (0..self.grid.len()).map(|_| Dead).collect();
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Cell::*, Game};
+    use super::*;
 
     #[test]
     fn lower_right_blinker() {
