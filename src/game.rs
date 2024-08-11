@@ -1,5 +1,7 @@
-use rand::seq::SliceRandom;
+mod builder;
+
 use std::fmt;
+use builder::{Builder, NoGrid};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Cell {
@@ -29,27 +31,11 @@ impl fmt::Display for Game {
     }
 }
 
-impl<const N: usize> From<[[Cell; N]; N]> for Game {
-    fn from(value: [[Cell; N]; N]) -> Self {
-        Game {
-            size: N,
-            grid: value.into_iter().flatten().collect(),
-        }
-    }
-}
-
 impl Game {
-    pub fn random(size: usize) -> Self {
-        const CELL_VARIANTS: [Cell; 2] = [Cell::Dead, Cell::Live];
-
-        let mut rng = rand::thread_rng();
-
-        Game {
-            size,
-            grid: (0..size * size).map(|_| *CELL_VARIANTS.choose(&mut rng).unwrap()).collect()
-        }
+    pub fn builder() -> Builder<NoGrid> {
+        Builder::new()
     }
-    
+
     pub fn evolve(&mut self) {
         const NEIGHBOR_OFFSETS: [(isize, isize); 8] = [
             (0, 1), (-1, 1), (-1, 0), (-1, -1),
@@ -86,12 +72,12 @@ mod tests {
 
     #[test]
     fn lower_right_blinker() {
-        let blinker = Game::from([
+        let blinker = Game::builder().grid([
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Live, Dead, Live, Live],
-        ]);
+        ]).build();
         let mut evolved_blinker = blinker.clone();
 
         evolved_blinker.evolve();
@@ -102,12 +88,12 @@ mod tests {
 
     #[test]
     fn upper_left_blinker() {
-        let blinker = Game::from([
+        let blinker = Game::builder().grid([
             [Live, Live, Dead, Live],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
-        ]);
+        ]).build();
         let mut evolved_blinker = blinker.clone();
 
         evolved_blinker.evolve();
@@ -118,13 +104,13 @@ mod tests {
 
     #[test]
     fn glider() {
-        let mut glider = Game::from([
+        let mut glider = Game::builder().grid([
             [Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Live, Dead],
             [Dead, Dead, Dead, Dead, Live],
             [Dead, Dead, Live, Live, Live],
-        ]);
+        ]).build();
 
         glider.evolve();
         assert_eq!(glider.grid, 
@@ -173,12 +159,12 @@ mod tests {
     
     #[test]
     fn clear_grid() {
-        let mut blinker = Game::from([
+        let mut blinker = Game::builder().grid([
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Live, Dead, Live, Live],
-        ]);
+        ]).build();
 
         blinker.clear_grid();
 
