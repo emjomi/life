@@ -62,6 +62,10 @@ impl Grid {
         }).collect();
         self.cells = next_cells;
     }
+    
+    pub fn clear(&mut self) {
+        self.cells = (0..self.cells.len()).map(|_| Cell::Dead).collect();
+    }
 }
 
 #[cfg(test)]
@@ -153,5 +157,19 @@ mod tests {
                 Live, Dead, Dead, Dead, Dead
             ].into_iter().collect()
         );
+    }
+    
+    #[test]
+    fn clear() {
+        let mut blinker = Grid::from([
+            [Dead, Dead, Dead, Dead],
+            [Dead, Dead, Dead, Dead],
+            [Dead, Dead, Dead, Dead],
+            [Live, Dead, Live, Live],
+        ]);
+
+        blinker.clear();
+
+        assert_eq!(blinker.cells, [Dead; 16].into_iter().collect());
     }
 }
