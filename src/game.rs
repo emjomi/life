@@ -8,15 +8,15 @@ pub enum Cell {
 }
 
 #[derive(Debug, Clone)]
-pub struct Grid {
+pub struct Game {
     size: usize,
-    cells: Box<[Cell]>,
+    grid: Box<[Cell]>,
 }
 
-impl fmt::Display for Grid {
+impl fmt::Display for Game {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut result = String::with_capacity(self.size * (self.size + 1));
-        for row in self.cells.chunks(self.size) {
+        for row in self.grid.chunks(self.size) {
             for cell in row {
                 result.push(match cell {
                     Cell::Dead => ' ',
@@ -29,24 +29,24 @@ impl fmt::Display for Grid {
     }
 }
 
-impl<const N: usize> From<[[Cell; N]; N]> for Grid {
+impl<const N: usize> From<[[Cell; N]; N]> for Game {
     fn from(value: [[Cell; N]; N]) -> Self {
-        Grid {
+        Game {
             size: N,
-            cells: value.into_iter().flatten().collect(),
+            grid: value.into_iter().flatten().collect(),
         }
     }
 }
 
-impl Grid {
+impl Game {
     pub fn random(size: usize) -> Self {
         const CELL_VARIANTS: [Cell; 2] = [Cell::Dead, Cell::Live];
 
         let mut rng = rand::thread_rng();
 
-        Grid {
+        Game {
             size,
-            cells: (0..size * size).map(|_| *CELL_VARIANTS.choose(&mut rng).unwrap()).collect()
+            grid: (0..size * size).map(|_| *CELL_VARIANTS.choose(&mut rng).unwrap()).collect()
         }
     }
     
@@ -56,14 +56,14 @@ impl Grid {
             (0, -1), (1, -1), (1, 0), (1, 1),
         ];
 
-        let next_cells = self.cells.iter().enumerate().map(|(i, cell)| {
+        let next_cells = self.grid.iter().enumerate().map(|(i, cell)| {
             let row = i / self.size;
             let col = i % self.size;
 
             let neighbors = NEIGHBOR_OFFSETS.iter().filter(|(dx, dy)| {
                     let neighbor_row = (row as isize + dx).rem_euclid(self.size as isize) as usize;
                     let neighbor_col = (col as isize + dy).rem_euclid(self.size as isize) as usize;
-                    self.cells[neighbor_row * self.size + neighbor_col] == Cell::Live
+                    self.grid[neighbor_row * self.size + neighbor_col] == Cell::Live
                 }).count();
 
             match (cell, neighbors) {
@@ -72,21 +72,21 @@ impl Grid {
                 _ => Cell::Dead,
             }
         }).collect();
-        self.cells = next_cells;
+        self.grid = next_cells;
     }
     
-    pub fn clear(&mut self) {
-        self.cells = (0..self.cells.len()).map(|_| Cell::Dead).collect();
+    pub fn clear_grid(&mut self) {
+        self.grid = (0..self.grid.len()).map(|_| Cell::Dead).collect();
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Cell::*, Grid};
+    use super::{Cell::*, Game};
 
     #[test]
     fn lower_right_blinker() {
-        let blinker = Grid::from([
+        let blinker = Game::from([
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
@@ -97,12 +97,12 @@ mod tests {
         evolved_blinker.evolve();
         evolved_blinker.evolve();
 
-        assert_eq!(blinker.cells, evolved_blinker.cells);
+        assert_eq!(blinker.grid, evolved_blinker.grid);
     }
 
     #[test]
     fn upper_left_blinker() {
-        let blinker = Grid::from([
+        let blinker = Game::from([
             [Live, Live, Dead, Live],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
@@ -113,12 +113,12 @@ mod tests {
         evolved_blinker.evolve();
         evolved_blinker.evolve();
 
-        assert_eq!(blinker.cells, evolved_blinker.cells);
+        assert_eq!(blinker.grid, evolved_blinker.grid);
     }
 
     #[test]
     fn glider() {
-        let mut glider = Grid::from([
+        let mut glider = Game::from([
             [Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Live, Dead],
@@ -127,7 +127,7 @@ mod tests {
         ]);
 
         glider.evolve();
-        assert_eq!(glider.cells, 
+        assert_eq!(glider.grid, 
             [
                 Dead, Dead, Dead, Live, Dead,
                 Dead, Dead, Dead, Dead, Dead,
@@ -138,7 +138,7 @@ mod tests {
         );
 
         glider.evolve();
-        assert_eq!(glider.cells,
+        assert_eq!(glider.grid,
             [
                 Dead, Dead, Dead, Live, Live,
                 Dead, Dead, Dead, Dead, Dead,
@@ -149,7 +149,7 @@ mod tests {
         );
 
         glider.evolve();
-        assert_eq!(glider.cells,
+        assert_eq!(glider.grid,
             [
                 Dead, Dead, Dead, Live, Live,
                 Dead, Dead, Dead, Dead, Dead,
@@ -160,7 +160,7 @@ mod tests {
         );
 
         glider.evolve();
-        assert_eq!(glider.cells,
+        assert_eq!(glider.grid,
             [
                 Live, Dead, Dead, Live, Live,
                 Dead, Dead, Dead, Dead, Dead,
@@ -172,16 +172,16 @@ mod tests {
     }
     
     #[test]
-    fn clear() {
-        let mut blinker = Grid::from([
+    fn clear_grid() {
+        let mut blinker = Game::from([
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Live, Dead, Live, Live],
         ]);
 
-        blinker.clear();
+        blinker.clear_grid();
 
-        assert_eq!(blinker.cells, [Dead; 16].into_iter().collect());
+        assert_eq!(blinker.grid, [Dead; 16].into_iter().collect());
     }
 }
