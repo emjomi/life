@@ -1,3 +1,4 @@
+use rand::seq::SliceRandom;
 use std::fmt;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -38,6 +39,17 @@ impl<const N: usize> From<[[Cell; N]; N]> for Grid {
 }
 
 impl Grid {
+    pub fn random(size: usize) -> Self {
+        const CELL_VARIANTS: [Cell; 2] = [Cell::Dead, Cell::Live];
+
+        let mut rng = rand::thread_rng();
+
+        Grid {
+            size,
+            cells: (0..size * size).map(|_| *CELL_VARIANTS.choose(&mut rng).unwrap()).collect()
+        }
+    }
+    
     pub fn evolve(&mut self) {
         const NEIGHBOR_OFFSETS: [(isize, isize); 8] = [
             (0, 1), (-1, 1), (-1, 0), (-1, -1),

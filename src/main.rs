@@ -1,19 +1,13 @@
 mod game;
 
-use game::{Grid, Cell::*};
+use game::Grid;
 
 fn main() {
-    let mut glider = Grid::from([
-        [Dead, Dead, Dead, Dead, Dead],
-        [Dead, Dead, Dead, Dead, Dead],
-        [Dead, Dead, Dead, Live, Dead],
-        [Dead, Dead, Dead, Dead, Live],
-        [Dead, Dead, Live, Live, Live],
-    ]);
+    let mut grid = Grid::random(15);
     
     loop {
-        println!("\x1B[2J{}", glider);
-        glider.evolve();
+        println!("\x1B[2J{}", grid);
+        grid.evolve();
         std::thread::sleep(std::time::Duration::from_millis(100));
     }
 }
