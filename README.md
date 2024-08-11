@@ -1,1 +1,1 @@
-Implementation of Conway's Game of Life
+Implementation of Life-like cellular automatons

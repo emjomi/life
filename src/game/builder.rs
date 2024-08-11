@@ -1,4 +1,4 @@
-use super::{Cell, Cell::*, Game};
+use super::{Cell, Cell::*, Game, Rule};
 use rand::seq::SliceRandom;
 
 pub struct NoGrid;
@@ -7,6 +7,7 @@ pub type Grid = Box<[Cell]>;
 pub struct Builder<G> {
     size: usize,
     grid: G,
+    rule: Rule
 }
 
 impl Builder<NoGrid> {
@@ -14,6 +15,7 @@ impl Builder<NoGrid> {
         Builder {
             size: 0,
             grid: NoGrid,
+            rule: Rule::default()
         }
     }
 
@@ -21,6 +23,7 @@ impl Builder<NoGrid> {
         Builder {
             size: N,
             grid: grid.into_iter().flatten().collect(),
+            rule: self.rule
         }
     }
 
@@ -31,9 +34,8 @@ impl Builder<NoGrid> {
 
         Builder {
             size,
-            grid: (0..size * size)
-                .map(|_| *CELL_VARIANTS.choose(&mut rng).unwrap())
-                .collect(),
+            grid: (0..size * size).map(|_| *CELL_VARIANTS.choose(&mut rng).unwrap()).collect(),
+            rule: self.rule
         }
     }
 }
@@ -43,6 +45,17 @@ impl Builder<Grid> {
         Game {
             size: self.size,
             grid: self.grid,
+            rule: self.rule
+        }
+    }
+}
+
+impl<G> Builder<G> {
+    pub fn rule(self, rule: Rule) -> Self {
+        Self {
+            size: self.size,
+            grid: self.grid,
+            rule
         }
     }
 }

@@ -4,12 +4,14 @@ mod rule;
 
 use std::fmt;
 use builder::{Builder, NoGrid};
-use cell::{Cell, Cell::*};
+pub use cell::{Cell, Cell::*};
+pub use rule::Rule;
 
 #[derive(Debug)]
 pub struct Game {
     size: usize,
     grid: Box<[Cell]>,
+    rule: Rule
 }
 
 impl fmt::Display for Game {
@@ -47,11 +49,11 @@ impl Game {
                 let neighbor_row = (row as isize + dx).rem_euclid(self.size as isize) as usize;
                 let neighbor_col = (col as isize + dy).rem_euclid(self.size as isize) as usize;
                 self.grid[neighbor_row * self.size + neighbor_col] == Live
-            }).count();
+            }).count() as u8;
 
             match (cell, neighbors) {
-                (Dead, 3) => Live,
-                (Live, 2 | 3) => Live,
+                (Dead, n) if self.rule.is_born(n) => Live,
+                (Live, n) if self.rule.is_survivor(n) => Live,
                 _ => Dead,
             }
         }).collect();
@@ -154,6 +156,73 @@ mod tests {
                 Live, Dead, Dead, Dead, Dead
             ].into_iter().collect()
         );
+    }
+    
+    #[test]
+    fn radar_seeds_automaton() {
+        let mut radar = Game::builder().rule(Rule::new([2].into_iter().collect(), [].into_iter().collect())).grid([
+            [Dead, Dead, Dead, Dead, Dead, Dead],
+            [Dead, Live, Dead, Dead, Dead, Dead],
+            [Dead, Dead, Live, Live, Dead, Dead],
+            [Dead, Dead, Live, Live, Dead, Dead],
+            [Dead, Dead, Dead, Dead, Live, Dead],
+            [Dead, Dead, Dead, Dead, Dead, Dead],
+        ]).build();
+        
+        let initial_grid = radar.grid.clone();
+
+        radar.evolve();
+        radar.evolve();
+        radar.evolve();
+        radar.evolve();
+
+        assert_eq!(radar.grid, initial_grid);
+    }
+    
+    #[test]
+    fn flock_predecessor_flock_automaton() {
+        let mut flock_predecessor = Game::builder().rule(Rule::new([3].into_iter().collect(), [1, 2].into_iter().collect())).grid([
+            [Dead, Dead, Dead, Dead, Dead, Dead, Dead],
+            [Dead, Dead, Dead, Dead, Dead, Dead, Dead],
+            [Dead, Dead, Live, Live, Live, Dead, Dead],
+            [Dead, Dead, Live, Dead, Live, Dead, Dead],
+            [Dead, Dead, Live, Live, Live, Dead, Dead],
+            [Dead, Dead, Dead, Dead, Dead, Dead, Dead],
+            [Dead, Dead, Dead, Dead, Dead, Dead, Dead],
+        ]).build();
+        
+        flock_predecessor.evolve();
+        flock_predecessor.evolve();
+        flock_predecessor.evolve();
+        
+        let flock_grid = flock_predecessor.grid.clone();
+
+        flock_predecessor.evolve();
+
+        assert_eq!(flock_predecessor.grid, flock_grid);
+    }
+    
+    #[test]
+    fn moon_iceballs_automaton() {
+        let mut moon = Game::builder().rule(Rule::new([2, 5, 6, 7, 8].into_iter().collect(), (5..=8).into_iter().collect())).grid([
+            [Dead, Dead, Dead, Dead, Dead, Dead],
+            [Dead, Dead, Dead, Dead, Dead, Dead],
+            [Dead, Dead, Dead, Dead, Dead, Dead],
+            [Dead, Dead, Dead, Dead, Dead, Dead],
+            [Dead, Dead, Live, Live, Dead, Dead],
+            [Dead, Live, Dead, Dead, Live, Dead],
+        ]).build();
+
+        let initial_grid = moon.grid.clone();
+        
+        moon.evolve();
+        moon.evolve();
+        moon.evolve();
+        moon.evolve();
+        moon.evolve();
+        moon.evolve();
+
+        assert_eq!(moon.grid, initial_grid);
     }
     
     #[test]
