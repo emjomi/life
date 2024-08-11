@@ -1,11 +1,12 @@
 mod builder;
 mod cell;
+mod rule;
 
 use std::fmt;
 use builder::{Builder, NoGrid};
 use cell::{Cell, Cell::*};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Game {
     size: usize,
     grid: Box<[Cell]>,
@@ -68,34 +69,36 @@ mod tests {
 
     #[test]
     fn lower_right_blinker() {
-        let blinker = Game::builder().grid([
+        let mut blinker = Game::builder().grid([
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Live, Dead, Live, Live],
         ]).build();
-        let mut evolved_blinker = blinker.clone();
+        
+        let initial_grid = blinker.grid.clone();
 
-        evolved_blinker.evolve();
-        evolved_blinker.evolve();
+        blinker.evolve();
+        blinker.evolve();
 
-        assert_eq!(blinker.grid, evolved_blinker.grid);
+        assert_eq!(blinker.grid, initial_grid);
     }
 
     #[test]
     fn upper_left_blinker() {
-        let blinker = Game::builder().grid([
+        let mut blinker = Game::builder().grid([
             [Live, Live, Dead, Live],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
         ]).build();
-        let mut evolved_blinker = blinker.clone();
+        
+        let initial_grid = blinker.grid.clone();
 
-        evolved_blinker.evolve();
-        evolved_blinker.evolve();
+        blinker.evolve();
+        blinker.evolve();
 
-        assert_eq!(blinker.grid, evolved_blinker.grid);
+        assert_eq!(blinker.grid, initial_grid);
     }
 
     #[test]
