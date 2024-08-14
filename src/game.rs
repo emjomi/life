@@ -86,6 +86,16 @@ impl Game {
     pub fn cell(&self, row: usize, col: usize) -> Option<&Cell> {
         self.grid.get(row * self.size + col)
     }
+    
+    pub fn toggle_cell(&mut self, row: usize, col: usize) {
+        let i = row * self.size + col;
+        if let Some(cell) = self.grid.get(i) {
+            self.grid[i] = match cell {
+                Dead => Live,
+                Live => Dead
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -352,5 +362,23 @@ mod tests {
         let game = Game::builder().grid([[Live]]).build();
 
         assert_eq!(game.cell(0, 1), None);
+    }
+    
+    #[test]
+    fn toggle_existing_cell() {
+        let mut game = Game::builder().grid([[Live]]).build();
+        
+        game.toggle_cell(0, 0);
+        
+        assert_eq!(game.grid, [Dead].into_iter().collect());
+    }
+    
+    #[test]
+    fn toggle_non_existing_cell() {
+        let mut game = Game::builder().grid([[Live]]).build();
+        
+        game.toggle_cell(0, 1);
+        
+        assert_eq!(game.grid, [Live].into_iter().collect());
     }
 }
