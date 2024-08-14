@@ -96,6 +96,10 @@ impl Game {
             }
         }
     }
+    
+    pub fn grid_size(&self) -> usize {
+        self.size
+    }
 }
 
 #[cfg(test)]
