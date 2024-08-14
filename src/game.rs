@@ -63,6 +63,21 @@ impl Game {
     pub fn clear_grid(&mut self) {
         self.grid = (0..self.grid.len()).map(|_| Dead).collect();
     }
+
+    pub fn resize_grid(&mut self, new_size: usize) {
+        let offset = (new_size as isize - self.size as isize) / 2;
+        self.grid = (0..new_size.pow(2)).map(|i| {
+            let old_row = i as isize / new_size as isize - offset;
+            let old_col = i as isize % new_size as isize - offset;
+
+            if old_row >= 0 && old_row < self.size as isize && old_col >= 0 && old_col < self.size as isize {
+                self.grid[(old_row * self.size as isize + old_col) as usize]
+            } else {
+                Dead
+            }
+        }).collect();
+        self.size = new_size;
+    }
 }
 
 #[cfg(test)]
@@ -237,5 +252,83 @@ mod tests {
         blinker.clear_grid();
 
         assert_eq!(blinker.grid, [Dead; 16].into_iter().collect());
+    }
+    
+    #[test]
+    fn resize_grid_to_bigger_odd() {
+        let mut game = Game::builder().grid([
+            [Live, Live, Live],
+            [Dead, Dead, Dead],
+            [Live, Live, Live],
+        ]).build();
+        
+        game.resize_grid(5);
+        
+        assert_eq!(game.size, 5);
+        assert_eq!(game.grid, [
+            Dead, Dead, Dead, Dead, Dead,
+            Dead, Live, Live, Live, Dead,
+            Dead, Dead, Dead, Dead, Dead,
+            Dead, Live, Live, Live, Dead,
+            Dead, Dead, Dead, Dead, Dead
+        ].into_iter().collect());
+    }
+    
+    #[test]
+    fn resize_grid_to_lower_odd() {
+        let mut game = Game::builder().grid([
+            [Dead, Dead, Dead, Dead, Dead],
+            [Dead, Live, Live, Live, Dead],
+            [Dead, Dead, Dead, Dead, Dead],
+            [Dead, Live, Live, Live, Dead],
+            [Dead, Dead, Dead, Dead, Dead]
+        ]).build();
+        
+        game.resize_grid(3);
+        
+        assert_eq!(game.size, 3);
+        assert_eq!(game.grid, [
+            Live, Live, Live,
+            Dead, Dead, Dead,
+            Live, Live, Live,
+        ].into_iter().collect());
+    }
+    
+    #[test]
+    fn resize_grid_to_bigger_even() {
+        let mut game = Game::builder().grid([
+            [Live, Live, Live],
+            [Dead, Dead, Dead],
+            [Live, Live, Live],
+        ]).build();
+        
+        game.resize_grid(4);
+        
+        assert_eq!(game.size, 4);
+        assert_eq!(game.grid, [
+            Live, Live, Live, Dead,
+            Dead, Dead, Dead, Dead,
+            Live, Live, Live, Dead,
+            Dead, Dead, Dead, Dead
+        ].into_iter().collect());
+    }
+    
+    #[test]
+    fn resize_grid_to_lower_even() {
+        let mut game = Game::builder().grid([
+            [Live, Live, Live, Dead],
+            [Dead, Dead, Dead, Dead],
+            [Live, Live, Live, Dead],
+            [Dead, Dead, Dead, Dead]
+        ]).build();
+        
+        game.resize_grid(3);
+        
+        assert_eq!(game.size, 3);
+        assert_eq!(game.grid, [
+            Live, Live, Live,
+            Dead, Dead, Dead,
+            Live, Live, Live,
+        ].into_iter().collect());
     }
 }
