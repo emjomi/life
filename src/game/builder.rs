@@ -1,5 +1,4 @@
-use super::{Cell, Cell::*, Game, Rule};
-use rand::seq::SliceRandom;
+use super::{Cell, Game, Rule};
 
 pub struct NoGrid;
 pub type Grid = Box<[Cell]>;
@@ -28,13 +27,9 @@ impl Builder<NoGrid> {
     }
 
     pub fn random_grid(self, size: usize) -> Builder<Grid> {
-        const CELL_VARIANTS: [Cell; 2] = [Dead, Live];
-
-        let mut rng = rand::thread_rng();
-
         Builder {
             size,
-            grid: (0..size * size).map(|_| *CELL_VARIANTS.choose(&mut rng).unwrap()).collect(),
+            grid: (0..size.pow(2)).map(|_| rand::random()).collect(),
             rule: self.rule
         }
     }
