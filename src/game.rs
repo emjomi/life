@@ -82,6 +82,10 @@ impl Game {
     pub fn randomize_grid(&mut self) {
         self.grid = (0..self.grid.len()).map(|_| rand::random()).collect();
     }
+    
+    pub fn cell(&self, row: usize, col: usize) -> Option<&Cell> {
+        self.grid.get(row * self.size + col)
+    }
 }
 
 #[cfg(test)]
@@ -334,5 +338,19 @@ mod tests {
             Dead, Dead, Dead,
             Live, Live, Live,
         ].into_iter().collect());
+    }
+    
+    #[test]
+    fn get_existing_cell() {
+        let game = Game::builder().grid([[Live]]).build();
+
+        assert_eq!(game.cell(0, 0), Some(&Live));
+    }
+    
+    #[test]
+    fn get_non_existing_cell() {
+        let game = Game::builder().grid([[Live]]).build();
+
+        assert_eq!(game.cell(0, 1), None);
     }
 }
