@@ -78,6 +78,10 @@ impl Game {
         }).collect();
         self.size = new_size;
     }
+    
+    pub fn randomize_grid(&mut self) {
+        self.grid = (0..self.grid.len()).map(|_| rand::random()).collect();
+    }
 }
 
 #[cfg(test)]
