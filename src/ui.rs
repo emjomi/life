@@ -3,7 +3,7 @@ use std::{sync::{atomic::{Ordering, AtomicBool}, Arc, Mutex}, time::Duration};
 use super::game::{Game, Cell::*};
 
 pub fn build_ui(app: &Application) {    
-    let game = Arc::new(Mutex::new(Game::builder().random_grid(50).build()));
+    let game = Arc::new(Mutex::new(Game::builder().random_grid(30).build()));
     let drawing_area = DrawingArea::new();
     let is_running = Arc::new(AtomicBool::new(true));
     
@@ -27,6 +27,26 @@ pub fn build_ui(app: &Application) {
         }
     });
     
+    let gesture = gtk::GestureClick::new();
+    gesture.connect_pressed({
+        let drawing_area = drawing_area.clone();
+        let is_running = Arc::clone(&is_running);
+        let game = Arc::clone(&game);
+        move |_, _, x, y| {
+            if !is_running.load(Ordering::Acquire) {
+                if let Ok(mut game_guard) = game.lock() {
+                    let grid_size = game_guard.grid_size();
+                    let row = (x * game_guard.grid_size() as f64 / drawing_area.width() as f64) as usize;
+                    let col = (y * game_guard.grid_size() as f64 / drawing_area.height() as f64) as usize;
+                    
+                    game_guard.toggle_cell(row, col);
+                }
+                drawing_area.queue_draw();
+            }
+        }
+    });
+    drawing_area.add_controller(gesture);
+    
     let toggle_running_action = gio::SimpleAction::new("toggle_running", None);
     let randomize_grid_action = gio::SimpleAction::new("randomize_grid", None);
     let clear_grid_action = gio::SimpleAction::new("clear_grid", None);
@@ -44,8 +64,8 @@ pub fn build_ui(app: &Application) {
         move |_, _| {
             if let Ok(mut game_guard) = game.lock() {
                 game_guard.randomize_grid();
-                drawing_area.queue_draw();
             }
+            drawing_area.queue_draw();
         }
     });
     clear_grid_action.connect_activate({
@@ -54,8 +74,8 @@ pub fn build_ui(app: &Application) {
         move |_, _| {
             if let Ok(mut game_guard) = game.lock() {
                 game_guard.clear_grid();
-                drawing_area.queue_draw();
             }
+            drawing_area.queue_draw();
         }
     });
     evolve_action.connect_activate({
@@ -66,8 +86,8 @@ pub fn build_ui(app: &Application) {
             if !is_running.load(Ordering::Acquire) {
                 if let Ok(mut game_guard) = game.lock() {
                     game_guard.evolve();
-                    drawing_area.queue_draw();
                 }
+                drawing_area.queue_draw();
             }
         }
     });
@@ -93,10 +113,10 @@ pub fn build_ui(app: &Application) {
     glib::timeout_add_local(Duration::from_millis(1000 / 30), 
         move || {
             if is_running.load(Ordering::Acquire) {
-                drawing_area.queue_draw();
                 if let Ok(mut game_guard) = game.lock() {
                     game_guard.evolve();
                 }
+                drawing_area.queue_draw();
             }
             glib::ControlFlow::Continue
         }
