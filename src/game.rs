@@ -41,7 +41,7 @@ impl Game {
             (0, -1), (1, -1), (1, 0), (1, 1),
         ];
 
-        let next_cells = self.grid.iter().enumerate().map(|(i, cell)| {
+        let new_grid = self.grid.iter().enumerate().map(|(i, cell)| {
             let row = i / self.size;
             let col = i % self.size;
 
@@ -57,7 +57,7 @@ impl Game {
                 _ => Dead,
             }
         }).collect();
-        self.grid = next_cells;
+        self.grid = new_grid;
     }
     
     pub fn clear_grid(&mut self) {
