@@ -30,7 +30,8 @@ pub fn build_ui(app: &Application) {
     let toggle_running_action = gio::SimpleAction::new("toggle_running", None);
     let randomize_grid_action = gio::SimpleAction::new("randomize_grid", None);
     let clear_grid_action = gio::SimpleAction::new("clear_grid", None);
-    
+    let evolve_action = gio::SimpleAction::new("evolve", None);
+
     toggle_running_action.connect_activate({
         let is_run = Arc::clone(&is_running);
         move |_, _| {
@@ -57,14 +58,29 @@ pub fn build_ui(app: &Application) {
             }
         }
     });
+    evolve_action.connect_activate({
+        let is_running = Arc::clone(&is_running);
+        let game = Arc::clone(&game);
+        let drawing_area = drawing_area.clone();
+        move |_, _| {
+            if !is_running.load(Ordering::Acquire) {
+                if let Ok(mut game_guard) = game.lock() {
+                    game_guard.evolve();
+                    drawing_area.queue_draw();
+                }
+            }
+        }
+    });
     
     app.add_action(&toggle_running_action);
     app.add_action(&randomize_grid_action);
     app.add_action(&clear_grid_action);
+    app.add_action(&evolve_action);
 
     app.set_accels_for_action("app.toggle_running", &["space", "k"]);
     app.set_accels_for_action("app.randomize_grid", &["<Ctrl>R"]);
     app.set_accels_for_action("app.clear_grid", &["<Ctrl>E"]);
+    app.set_accels_for_action("app.evolve", &["Right", "l"]);
     
     let window = ApplicationWindow::builder()
         .application(app)
