@@ -29,6 +29,7 @@ pub fn build_ui(app: &Application) {
     
     let toggle_running_action = gio::SimpleAction::new("toggle_running", None);
     let randomize_grid_action = gio::SimpleAction::new("randomize_grid", None);
+    let clear_grid_action = gio::SimpleAction::new("clear_grid", None);
     
     toggle_running_action.connect_activate({
         let is_run = Arc::clone(&is_running);
@@ -46,12 +47,24 @@ pub fn build_ui(app: &Application) {
             }
         }
     });
+    clear_grid_action.connect_activate({
+        let game = Arc::clone(&game);
+        let drawing_area = drawing_area.clone();
+        move |_, _| {
+            if let Ok(mut game_guard) = game.lock() {
+                game_guard.clear_grid();
+                drawing_area.queue_draw();
+            }
+        }
+    });
     
     app.add_action(&toggle_running_action);
     app.add_action(&randomize_grid_action);
+    app.add_action(&clear_grid_action);
 
     app.set_accels_for_action("app.toggle_running", &["space", "k"]);
     app.set_accels_for_action("app.randomize_grid", &["<Ctrl>R"]);
+    app.set_accels_for_action("app.clear_grid", &["<Ctrl>E"]);
     
     let window = ApplicationWindow::builder()
         .application(app)
