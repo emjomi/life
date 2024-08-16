@@ -4,8 +4,12 @@ use super::game::{Game, Cell::*};
 
 pub fn build_ui(app: &Application) {    
     let game = Arc::new(Mutex::new(Game::builder().random_grid(30).build()));
-    let drawing_area = DrawingArea::new();
     let is_running = Arc::new(AtomicBool::new(true));
+    let drawing_area = DrawingArea::new();
+    drawing_area.set_cursor_from_name(match !is_running.load(Ordering::Acquire) {
+        false => Some("none"),
+        true => None
+    });
     
     drawing_area.set_draw_func({
         let game = Arc::clone(&game);
@@ -36,8 +40,8 @@ pub fn build_ui(app: &Application) {
             if !is_running.load(Ordering::Acquire) {
                 if let Ok(mut game_guard) = game.lock() {
                     let grid_size = game_guard.grid_size();
-                    let row = (x * game_guard.grid_size() as f64 / drawing_area.width() as f64) as usize;
-                    let col = (y * game_guard.grid_size() as f64 / drawing_area.height() as f64) as usize;
+                    let row = (x * grid_size as f64 / drawing_area.width() as f64) as usize;
+                    let col = (y * grid_size as f64 / drawing_area.height() as f64) as usize;
                     
                     game_guard.toggle_cell(row, col);
                 }
@@ -56,9 +60,16 @@ pub fn build_ui(app: &Application) {
     toggle_running_action.connect_activate({
         let is_running = Arc::clone(&is_running);
         let evolve_action = evolve_action.clone();
+        let drawing_area = drawing_area.clone();
         move |_, _| {
             // fetch_xor returns the previous value
-            evolve_action.set_enabled(is_running.fetch_xor(true, Ordering::AcqRel));
+            let is_stopped = is_running.fetch_xor(true, Ordering::AcqRel);
+            
+            evolve_action.set_enabled(is_stopped);
+            drawing_area.set_cursor_from_name(match is_stopped {
+                false => Some("none"),
+                true => None
+            })
         }
     });
     randomize_grid_action.connect_activate({
