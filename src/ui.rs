@@ -1,4 +1,5 @@
-use gtk::{prelude::*, gio, glib, Application, ApplicationWindow, DrawingArea, HeaderBar, MenuButton};
+use adw::{gio, glib, prelude::*, Application, ApplicationWindow, HeaderBar, ToolbarView};
+use gtk::{DrawingArea, MenuButton};
 use std::{sync::{atomic::{Ordering, AtomicBool}, Arc, Mutex}, time::Duration};
 use super::game::{Game, Cell::*};
 
@@ -113,27 +114,31 @@ pub fn build_ui(app: &Application) {
     app.set_accels_for_action("app.clear_grid", &["<Ctrl>E"]);
     app.set_accels_for_action("app.evolve", &["Right", "l"]);
     
-    let main_menu = gio::Menu::new();
-        main_menu.append(Some("_Toggle Running"), Some("app.toggle_running"));
-        main_menu.append(Some("_Randomize Grid"), Some("app.randomize_grid"));
-        main_menu.append(Some("_Clear Grid"), Some("app.clear_grid"));
-        main_menu.append(Some("_Evolve Step"), Some("app.evolve"));
+    let menu = gio::Menu::new();
+    menu.append(Some("_Toggle Running"), Some("app.toggle_running"));
+    menu.append(Some("_Randomize Grid"), Some("app.randomize_grid"));
+    menu.append(Some("_Clear Grid"), Some("app.clear_grid"));
+    menu.append(Some("_Evolve Step"), Some("app.evolve"));
 
     let menu_button = MenuButton::builder()
         .icon_name("open-menu-symbolic")
-        .menu_model(&main_menu)
+        .menu_model(&menu)
         .build();
 
     let header_bar = HeaderBar::new();
     header_bar.pack_start(&menu_button);
     
+    let content = ToolbarView::builder()
+        .content(&drawing_area)
+        .build();
+    content.add_top_bar(&header_bar);
+    
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Life")
-        .titlebar(&header_bar)
         .default_width(400)
         .default_height(400)
-        .child(&drawing_area)
+        .content(&content)
         .build();
     
     glib::timeout_add_local(Duration::from_millis(1000 / 30), 

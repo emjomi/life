@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 rand = "0.8.5"
 gtk = { version = "0.9.0", package = "gtk4", features = ["v4_14"] }
+adw = { version = "0.7.0", package = "libadwaita", features = ["v1_2", "v1_5"] }

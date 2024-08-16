@@ -1,7 +1,7 @@
 mod game;
 mod ui;
 
-use gtk::{prelude::*, glib, Application};
+use adw::{prelude::*, glib, Application};
 use ui::build_ui;
 
 fn main() -> glib::ExitCode {
