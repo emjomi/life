@@ -51,11 +51,14 @@ pub fn build_ui(app: &Application) {
     let randomize_grid_action = gio::SimpleAction::new("randomize_grid", None);
     let clear_grid_action = gio::SimpleAction::new("clear_grid", None);
     let evolve_action = gio::SimpleAction::new("evolve", None);
+    evolve_action.set_enabled(!is_running.load(Ordering::Acquire));
 
     toggle_running_action.connect_activate({
-        let is_run = Arc::clone(&is_running);
+        let is_running = Arc::clone(&is_running);
+        let evolve_action = evolve_action.clone();
         move |_, _| {
-            is_run.fetch_xor(true, Ordering::AcqRel);
+            // fetch_xor returns the previous value
+            evolve_action.set_enabled(is_running.fetch_xor(true, Ordering::AcqRel));
         }
     });
     randomize_grid_action.connect_activate({
@@ -79,16 +82,13 @@ pub fn build_ui(app: &Application) {
         }
     });
     evolve_action.connect_activate({
-        let is_running = Arc::clone(&is_running);
         let game = Arc::clone(&game);
         let drawing_area = drawing_area.clone();
         move |_, _| {
-            if !is_running.load(Ordering::Acquire) {
-                if let Ok(mut game_guard) = game.lock() {
-                    game_guard.evolve();
-                }
-                drawing_area.queue_draw();
+            if let Ok(mut game_guard) = game.lock() {
+                game_guard.evolve();
             }
+            drawing_area.queue_draw();
         }
     });
     
