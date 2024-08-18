@@ -1,5 +1,5 @@
 use adw::{gio, glib, prelude::*, Application, ApplicationWindow, HeaderBar, ToolbarView};
-use gtk::{DrawingArea, MenuButton};
+use gtk::{DrawingArea, MenuButton, ShortcutsGroup, ShortcutsSection, ShortcutsShortcut, ShortcutsWindow};
 use std::{sync::{atomic::{Ordering, AtomicBool}, Arc, Mutex}, time::Duration};
 use super::game::{Game, Cell::*};
 
@@ -56,6 +56,7 @@ pub fn build_ui(app: &Application) {
     let randomize_grid_action = gio::SimpleAction::new("randomize_grid", None);
     let clear_grid_action = gio::SimpleAction::new("clear_grid", None);
     let evolve_action = gio::SimpleAction::new("evolve", None);
+    let show_help_overlay_action = gio::SimpleAction::new("show_help_overlay", None);
     evolve_action.set_enabled(!is_running.load(Ordering::Acquire));
 
     toggle_running_action.connect_activate({
@@ -108,17 +109,39 @@ pub fn build_ui(app: &Application) {
     app.add_action(&randomize_grid_action);
     app.add_action(&clear_grid_action);
     app.add_action(&evolve_action);
+    app.add_action(&show_help_overlay_action);
 
-    app.set_accels_for_action("app.toggle_running", &["space", "k"]);
-    app.set_accels_for_action("app.randomize_grid", &["<Ctrl>R"]);
-    app.set_accels_for_action("app.clear_grid", &["<Ctrl>E"]);
-    app.set_accels_for_action("app.evolve", &["Right", "l"]);
+    app.set_accels_for_action("app.toggle_running", &["space"]);
+    app.set_accels_for_action("app.randomize_grid", &["<Ctrl>r"]);
+    app.set_accels_for_action("app.clear_grid", &["<Ctrl>e"]);
+    app.set_accels_for_action("app.evolve", &["Right"]);
+    app.set_accels_for_action("app.show_help_overlay", &["<Ctrl>question"]);
+    
+    let shortcuts_window = ShortcutsWindow::builder().build();
+    let shortcuts_section = ShortcutsSection::builder().build();
+    let shortcuts_group = ShortcutsGroup::builder().title("General").build();
+    
+    shortcuts_window.add_section(&shortcuts_section);
+    shortcuts_section.add_group(&shortcuts_group);
+    
+    shortcuts_group.add_shortcut(&ShortcutsShortcut::builder().title("Toggle Running").action_name("app.toggle_running").accelerator("space").build());
+    shortcuts_group.add_shortcut(&ShortcutsShortcut::builder().title("Evolve Step").action_name("app.evolve").accelerator("Right").build());
+    shortcuts_group.add_shortcut(&ShortcutsShortcut::builder().title("Randomize Grid").action_name("app.randomize_grid").accelerator("<Ctrl>r").build());
+    shortcuts_group.add_shortcut(&ShortcutsShortcut::builder().title("Clear Grid").action_name("app.clear_grid").accelerator("<Ctrl>e").build());
+    shortcuts_group.add_shortcut(&ShortcutsShortcut::builder().title("Show shortcuts").action_name("app.show_help_overlay").accelerator("<Ctrl>question").build());
+
+    show_help_overlay_action.connect_activate({
+        move |_, _| {
+            shortcuts_window.present();
+        }
+    });
     
     let menu = gio::Menu::new();
     menu.append(Some("_Toggle Running"), Some("app.toggle_running"));
     menu.append(Some("_Randomize Grid"), Some("app.randomize_grid"));
     menu.append(Some("_Clear Grid"), Some("app.clear_grid"));
     menu.append(Some("_Evolve Step"), Some("app.evolve"));
+    menu.append(Some("_Keyboard Shortcuts"), Some("app.show_help_overlay"));
 
     let menu_button = MenuButton::builder()
         .icon_name("open-menu-symbolic")
