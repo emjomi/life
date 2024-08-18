@@ -137,10 +137,6 @@ pub fn build_ui(app: &Application) {
     });
     
     let menu = gio::Menu::new();
-    menu.append(Some("_Toggle Running"), Some("app.toggle_running"));
-    menu.append(Some("_Randomize Grid"), Some("app.randomize_grid"));
-    menu.append(Some("_Clear Grid"), Some("app.clear_grid"));
-    menu.append(Some("_Evolve Step"), Some("app.evolve"));
     menu.append(Some("_Keyboard Shortcuts"), Some("app.show_help_overlay"));
 
     let menu_button = MenuButton::builder()
