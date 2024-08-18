@@ -8,8 +8,8 @@ pub fn build_ui(app: &Application) {
     let is_running = Arc::new(AtomicBool::new(true));
     let drawing_area = DrawingArea::new();
     drawing_area.set_cursor_from_name(match !is_running.load(Ordering::Acquire) {
-        false => Some("none"),
-        true => None
+        true => Some("pointer"),
+        false => None
     });
     
     drawing_area.set_draw_func({
@@ -69,8 +69,8 @@ pub fn build_ui(app: &Application) {
             
             evolve_action.set_enabled(is_stopped);
             drawing_area.set_cursor_from_name(match is_stopped {
-                false => Some("none"),
-                true => None
+                true => Some("pointer"),
+                false => None
             })
         }
     });
