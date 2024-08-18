@@ -1,10 +1,14 @@
-use adw::{gio, glib, prelude::*, Application, ApplicationWindow, HeaderBar, PreferencesDialog, PreferencesPage, ToolbarView};
+use adw::{gio, glib, prelude::*, Application, ApplicationWindow, HeaderBar, PreferencesDialog, PreferencesGroup, PreferencesPage, SpinRow, ToolbarView};
 use gtk::{DrawingArea, MenuButton, ShortcutsGroup, ShortcutsSection, ShortcutsShortcut, ShortcutsWindow};
 use std::{sync::{atomic::{Ordering, AtomicBool}, Arc, Mutex}, time::Duration};
 use super::game::{Game, Cell::*};
 
-pub fn build_ui(app: &Application) {    
-    let game = Arc::new(Mutex::new(Game::builder().random_grid(30).build()));
+pub fn build_ui(app: &Application) {  
+    let size_row = SpinRow::with_range(0., 600., 1.);
+    size_row.set_value(30.);
+    size_row.set_title("Grid size");
+    
+    let game = Arc::new(Mutex::new(Game::builder().random_grid(size_row.value() as usize).build()));
     let is_running = Arc::new(AtomicBool::new(true));
     let drawing_area = DrawingArea::new();
     drawing_area.set_cursor_from_name(match !is_running.load(Ordering::Acquire) {
@@ -142,8 +146,22 @@ pub fn build_ui(app: &Application) {
     
     let preferences_dialog = PreferencesDialog::new();
     let preferences_page = PreferencesPage::new();
+    let preferences_group = PreferencesGroup::new();
     
     preferences_dialog.add(&preferences_page);
+    preferences_page.add(&preferences_group);
+    preferences_group.add(&size_row);
+    
+    size_row.connect_value_notify({
+       let game = Arc::clone(&game);
+       let drawing_area = drawing_area.clone();
+       move |spin| {
+           if let Ok(mut game_guard) = game.lock() {
+               game_guard.resize_grid(spin.value() as usize);
+           }
+           drawing_area.queue_draw();
+       }
+    });
     
     let menu = gio::Menu::new();
     menu.append(Some("_Preferences"), Some("app.show_preferences"));
