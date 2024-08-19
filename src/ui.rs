@@ -1,6 +1,8 @@
-use adw::{gio, glib, prelude::*, Application, ApplicationWindow, HeaderBar, PreferencesDialog, PreferencesGroup, PreferencesPage, SpinRow, ToolbarView};
+use adw::{gio, glib, prelude::*, Application, ApplicationWindow, EntryRow, HeaderBar, PreferencesDialog, PreferencesGroup, PreferencesPage, SpinRow, ToolbarView};
 use gtk::{DrawingArea, MenuButton, ShortcutsGroup, ShortcutsSection, ShortcutsShortcut, ShortcutsWindow};
 use std::{sync::{atomic::{Ordering, AtomicBool}, Arc, Mutex}, time::Duration};
+use crate::game::Rule;
+
 use super::game::{Game, Cell::*};
 
 pub fn build_ui(app: &Application) {  
@@ -8,7 +10,10 @@ pub fn build_ui(app: &Application) {
     size_row.set_value(30.);
     size_row.set_title("Grid size");
     
-    let game = Arc::new(Mutex::new(Game::builder().random_grid(size_row.value() as usize).build()));
+    let rule_row = EntryRow::builder().title("Rule (Bx/Sy)").text("B3/S23").build();
+    let rule = Rule::try_from(rule_row.text().as_str()).unwrap_or_default();
+    
+    let game = Arc::new(Mutex::new(Game::builder().rule(rule).random_grid(size_row.value() as usize).build()));
     let is_running = Arc::new(AtomicBool::new(true));
     let drawing_area = DrawingArea::new();
     drawing_area.set_cursor_from_name(match !is_running.load(Ordering::Acquire) {
@@ -151,6 +156,7 @@ pub fn build_ui(app: &Application) {
     preferences_dialog.add(&preferences_page);
     preferences_page.add(&preferences_group);
     preferences_group.add(&size_row);
+    preferences_group.add(&rule_row);
     
     size_row.connect_value_notify({
        let game = Arc::clone(&game);
@@ -158,6 +164,18 @@ pub fn build_ui(app: &Application) {
        move |spin| {
            if let Ok(mut game_guard) = game.lock() {
                game_guard.resize_grid(spin.value() as usize);
+           }
+           drawing_area.queue_draw();
+       }
+    });
+    
+    rule_row.connect_entry_activated({
+       let game = Arc::clone(&game);
+       let drawing_area = drawing_area.clone();
+       move |entry| {
+           if let Ok(mut game_guard) = game.lock() {
+               let rule = Rule::try_from(entry.text().as_str()).unwrap_or_default();
+               game_guard.set_rule(rule);
            }
            drawing_area.queue_draw();
        }
