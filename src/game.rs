@@ -100,6 +100,10 @@ impl Game {
     pub fn grid_size(&self) -> usize {
         self.size
     }
+    
+    pub fn set_rule(&mut self, rule: Rule) {
+        self.rule = rule
+    }
 }
 
 #[cfg(test)]
