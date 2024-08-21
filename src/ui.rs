@@ -31,7 +31,7 @@ pub fn build_ui(app: &Application) {
                 for row in 0..game_guard.grid_size() {
                     for col in 0..game_guard.grid_size() {
                         if let Some(&Live) = game_guard.cell(row, col) {
-                            context.set_source_rgb(0., 0., 0.);
+                            context.set_source_rgb(51. / 255., 209. / 255., 122. / 255.);
                             context.rectangle(row as f64 * cell_width, col as f64 * cell_height, cell_width, cell_height);
                             let _ = context.fill();
                         }
