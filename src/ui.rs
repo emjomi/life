@@ -1,11 +1,15 @@
 use adw::{gio, glib, prelude::*, Application, ApplicationWindow, EntryRow, HeaderBar, PreferencesDialog, PreferencesGroup, PreferencesPage, SpinRow, ToolbarView};
 use gtk::{DrawingArea, MenuButton, ShortcutsGroup, ShortcutsSection, ShortcutsShortcut, ShortcutsWindow};
-use std::{sync::{atomic::{Ordering, AtomicBool}, Arc, Mutex}, time::Duration};
+use std::{sync::{atomic::{AtomicBool, Ordering}, Arc, Mutex}, time::Duration};
 use crate::game::Rule;
 
 use super::game::{Game, Cell::*};
 
-pub fn build_ui(app: &Application) {  
+pub fn build_ui(app: &Application) {
+    let speed_row = SpinRow::with_range(0., 120., 1.);
+    speed_row.set_value(30.);
+    speed_row.set_title("Evolution speed");
+    
     let size_row = SpinRow::with_range(0., 600., 1.);
     size_row.set_value(30.);
     size_row.set_title("Grid size");
@@ -155,6 +159,7 @@ pub fn build_ui(app: &Application) {
     
     preferences_dialog.add(&preferences_page);
     preferences_page.add(&preferences_group);
+    preferences_group.add(&speed_row);
     preferences_group.add(&size_row);
     preferences_group.add(&rule_row);
     
@@ -213,7 +218,10 @@ pub fn build_ui(app: &Application) {
         }
     });
     
-    glib::timeout_add_local(Duration::from_millis(1000 / 30), 
+    let timeout = Arc::new(Mutex::new(Some(glib::timeout_add_local(Duration::from_millis(1000 / speed_row.value() as u64), {
+        let game = Arc::clone(&game);
+        let drawing_area = drawing_area.clone();
+        let is_running = Arc::clone(&is_running);
         move || {
             if is_running.load(Ordering::Acquire) {
                 if let Ok(mut game_guard) = game.lock() {
@@ -223,7 +231,35 @@ pub fn build_ui(app: &Application) {
             }
             glib::ControlFlow::Continue
         }
-    );
+    }))));
+    
+    speed_row.connect_value_notify({
+        let game = Arc::clone(&game);
+        let drawing_area = drawing_area.clone();
+        let is_running = Arc::clone(&is_running);
+        let timeout = Arc::clone(&timeout);
+        move |spin| {
+            if let Ok(mut timeout_guard) = timeout.lock() {
+                if let Some(src_id) = timeout_guard.take() {
+                    src_id.remove();
+                }
+                *timeout_guard = Some(glib::timeout_add_local(Duration::from_millis(1000 / spin.value() as u64), {
+                    let game = Arc::clone(&game);
+                    let drawing_area = drawing_area.clone();
+                    let is_running = Arc::clone(&is_running);
+                    move || {
+                        if is_running.load(Ordering::Acquire) {
+                            if let Ok(mut game_guard) = game.lock() {
+                                game_guard.evolve();
+                            }
+                            drawing_area.queue_draw();
+                        }
+                        glib::ControlFlow::Continue
+                    }
+                }));
+            }
+        }
+    });
     
     window.present();
 }
