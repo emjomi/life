@@ -6,7 +6,7 @@ use ui::build_ui;
 
 fn main() -> glib::ExitCode {
     let app = Application::builder()
-        .application_id("org.life.Life")
+        .application_id("com.github.emjomi.Life")
         .build();
     
     app.connect_activate(build_ui);
