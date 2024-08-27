@@ -8,13 +8,13 @@ pub use cell::{Cell, Cell::*};
 pub use rule::Rule;
 
 #[derive(Debug)]
-pub struct Game {
+pub struct Engine {
     size: usize,
     grid: Box<[Cell]>,
     rule: Rule
 }
 
-impl fmt::Display for Game {
+impl fmt::Display for Engine {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut result = String::with_capacity(self.size * (self.size + 1));
         for row in self.grid.chunks(self.size) {
@@ -30,7 +30,7 @@ impl fmt::Display for Game {
     }
 }
 
-impl Game {
+impl Engine {
     pub fn builder() -> Builder<NoGrid> {
         Builder::<NoGrid>::new()
     }
@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn lower_right_blinker() {
-        let mut blinker = Game::builder().grid([
+        let mut blinker = Engine::builder().grid([
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn upper_left_blinker() {
-        let mut blinker = Game::builder().grid([
+        let mut blinker = Engine::builder().grid([
             [Live, Live, Dead, Live],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn glider() {
-        let mut glider = Game::builder().grid([
+        let mut glider = Engine::builder().grid([
             [Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Live, Dead],
@@ -201,7 +201,7 @@ mod tests {
     
     #[test]
     fn radar_seeds_automaton() {
-        let mut radar = Game::builder().rule(Rule::new([2].into_iter().collect(), [].into_iter().collect())).grid([
+        let mut radar = Engine::builder().rule(Rule::new([2].into_iter().collect(), [].into_iter().collect())).grid([
             [Dead, Dead, Dead, Dead, Dead, Dead],
             [Dead, Live, Dead, Dead, Dead, Dead],
             [Dead, Dead, Live, Live, Dead, Dead],
@@ -222,7 +222,7 @@ mod tests {
     
     #[test]
     fn flock_predecessor_flock_automaton() {
-        let mut flock_predecessor = Game::builder().rule(Rule::new([3].into_iter().collect(), [1, 2].into_iter().collect())).grid([
+        let mut flock_predecessor = Engine::builder().rule(Rule::new([3].into_iter().collect(), [1, 2].into_iter().collect())).grid([
             [Dead, Dead, Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Live, Live, Live, Dead, Dead],
@@ -245,7 +245,7 @@ mod tests {
     
     #[test]
     fn moon_iceballs_automaton() {
-        let mut moon = Game::builder().rule(Rule::new([2, 5, 6, 7, 8].into_iter().collect(), (5..=8).into_iter().collect())).grid([
+        let mut moon = Engine::builder().rule(Rule::new([2, 5, 6, 7, 8].into_iter().collect(), (5..=8).into_iter().collect())).grid([
             [Dead, Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead, Dead, Dead],
@@ -268,7 +268,7 @@ mod tests {
     
     #[test]
     fn clear_grid() {
-        let mut blinker = Game::builder().grid([
+        let mut blinker = Engine::builder().grid([
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
             [Dead, Dead, Dead, Dead],
@@ -282,7 +282,7 @@ mod tests {
     
     #[test]
     fn resize_grid_to_bigger_odd() {
-        let mut game = Game::builder().grid([
+        let mut game = Engine::builder().grid([
             [Live, Live, Live],
             [Dead, Dead, Dead],
             [Live, Live, Live],
@@ -302,7 +302,7 @@ mod tests {
     
     #[test]
     fn resize_grid_to_lower_odd() {
-        let mut game = Game::builder().grid([
+        let mut game = Engine::builder().grid([
             [Dead, Dead, Dead, Dead, Dead],
             [Dead, Live, Live, Live, Dead],
             [Dead, Dead, Dead, Dead, Dead],
@@ -322,7 +322,7 @@ mod tests {
     
     #[test]
     fn resize_grid_to_bigger_even() {
-        let mut game = Game::builder().grid([
+        let mut game = Engine::builder().grid([
             [Live, Live, Live],
             [Dead, Dead, Dead],
             [Live, Live, Live],
@@ -341,7 +341,7 @@ mod tests {
     
     #[test]
     fn resize_grid_to_lower_even() {
-        let mut game = Game::builder().grid([
+        let mut game = Engine::builder().grid([
             [Live, Live, Live, Dead],
             [Dead, Dead, Dead, Dead],
             [Live, Live, Live, Dead],
@@ -360,21 +360,21 @@ mod tests {
     
     #[test]
     fn get_existing_cell() {
-        let game = Game::builder().grid([[Live]]).build();
+        let game = Engine::builder().grid([[Live]]).build();
 
         assert_eq!(game.cell(0, 0), Some(&Live));
     }
     
     #[test]
     fn get_non_existing_cell() {
-        let game = Game::builder().grid([[Live]]).build();
+        let game = Engine::builder().grid([[Live]]).build();
 
         assert_eq!(game.cell(0, 1), None);
     }
     
     #[test]
     fn toggle_existing_cell() {
-        let mut game = Game::builder().grid([[Live]]).build();
+        let mut game = Engine::builder().grid([[Live]]).build();
         
         game.toggle_cell(0, 0);
         
@@ -383,7 +383,7 @@ mod tests {
     
     #[test]
     fn toggle_non_existing_cell() {
-        let mut game = Game::builder().grid([[Live]]).build();
+        let mut game = Engine::builder().grid([[Live]]).build();
         
         game.toggle_cell(0, 1);
         

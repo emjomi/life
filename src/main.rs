@@ -1,4 +1,4 @@
-mod game;
+mod engine;
 mod ui;
 
 use adw::{prelude::*, glib, Application};

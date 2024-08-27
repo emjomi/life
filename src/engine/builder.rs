@@ -1,4 +1,4 @@
-use super::{Cell, Game, Rule};
+use super::{Cell, Engine, Rule};
 
 pub struct NoGrid;
 pub type Grid = Box<[Cell]>;
@@ -36,8 +36,8 @@ impl Builder<NoGrid> {
 }
 
 impl Builder<Grid> {
-    pub fn build(self) -> Game {
-        Game {
+    pub fn build(self) -> Engine {
+        Engine {
             size: self.size,
             grid: self.grid,
             rule: self.rule
