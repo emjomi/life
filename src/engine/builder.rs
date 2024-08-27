@@ -17,7 +17,8 @@ impl Builder<NoGrid> {
             rule: Rule::default()
         }
     }
-
+    
+    #[allow(dead_code)]
     pub fn grid<const N: usize>(self, grid: [[Cell; N]; N]) -> Builder<Grid> {
         Builder {
             size: N,

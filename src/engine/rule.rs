@@ -47,6 +47,7 @@ impl Default for Rule {
 }
 
 impl Rule {
+    #[allow(dead_code)]
     pub fn new(birth: HashSet<u8>, survival: HashSet<u8>) -> Self {
         Self {
             birth,
