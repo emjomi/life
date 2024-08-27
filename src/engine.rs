@@ -2,7 +2,6 @@ mod builder;
 mod cell;
 mod rule;
 
-use std::fmt;
 use builder::{Builder, NoGrid};
 pub use cell::{Cell, Cell::*};
 pub use rule::Rule;
@@ -12,22 +11,6 @@ pub struct Engine {
     size: usize,
     grid: Box<[Cell]>,
     rule: Rule
-}
-
-impl fmt::Display for Engine {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut result = String::with_capacity(self.size * (self.size + 1));
-        for row in self.grid.chunks(self.size) {
-            for cell in row {
-                result.push(match cell {
-                    Dead => ' ',
-                    Live => '@',
-                });
-            }
-            result.push('\n');
-        }
-        write!(f, "{}", result)
-    }
 }
 
 impl Engine {
